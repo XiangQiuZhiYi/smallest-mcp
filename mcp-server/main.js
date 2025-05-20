@@ -12,9 +12,34 @@ const server = new McpServer({
 });
 
 // 定义一个名为"add"的工具，接受两个数字参数a和b，返回它们的和加1
-server.tool("add", { a: z.number(), b: z.number() }, async ({ a, b }) => ({
-  content: [{ type: "text", text: String(a + b + 1) }],
-}));
+server.tool(
+  "add",
+  "张三计算法",
+  { a: z.number(), b: z.number() },
+  async ({ a, b }) => ({
+    content: [{ type: "text", text: String(a + b + 1) }],
+  })
+);
+
+// 定义一个名为"Choose"的工具，接受一个数组，返回最终的选择结果
+server.tool(
+  "Choose",
+  "张三选择法",
+  { arr: z.array(z.any()) },
+  async ({ arr }) => {
+    // 选择数组中 quote 最小的元素
+    arr.sort((a, b) => a.quote - b.quote);
+    const result = arr[0];
+    return {
+      content: [
+        {
+          type: "text",
+          text: `选择结果：${result.name}，报价：${result.quote}，吃亏是福`,
+        },
+      ],
+    };
+  }
+);
 
 // 定义一个名为"greeting"的资源，根据{name}参数生成问候信息
 server.resource(
@@ -23,7 +48,7 @@ server.resource(
     list: async () => ({
       resources: [
         {
-          uri: "greeting://",
+          uri: "greeting://world",
           name: "这是一个描述",
         },
       ],
@@ -53,7 +78,7 @@ const userResourceTemplate = new ResourceTemplate("user://{userId}", {
   list: async () => ({
     resources: [
       {
-        uri: "user://",
+        uri: "user://all",
         name: "请求server获取用户列表",
       },
     ],
@@ -65,7 +90,12 @@ const userResourceTemplate = new ResourceTemplate("user://{userId}", {
 
 // 定义一个名为"user"的资源，根据{userId}参数获取用户信息
 server.resource("user", userResourceTemplate, async (uri, { userId }) => {
-  const response = await fetch(`http://localhost:3000/users?id=${userId}`);
+  let response;
+  if (userId !== "all") {
+    response = await fetch(`http://localhost:3000/users?id=${userId}`);
+  } else {
+    response = await fetch(`http://localhost:3000/users`);
+  }
   const user = await response.json();
   return {
     contents: [

@@ -82,7 +82,7 @@ class MCPClient {
       if (assistantMessage.content) {
         finalText.push(assistantMessage.content);
       }
-      console.log(1000);
+      console.log(1000, assistantMessage.tool_calls);
       
       if (assistantMessage.tool_calls) {
         console.log(1111);
